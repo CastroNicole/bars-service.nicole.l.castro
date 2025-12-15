@@ -2,13 +2,11 @@ const mongodb = require("mongodb");
 const MongoClient = mongodb.MongoClient;
 const connectionURL = "mongodb://127.0.0.1:27017";
 const databaseName = "bars_db";
-const client = new MongoClient(connectionURL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+const client = new MongoClient(connectionURL);
 
 async function run() {
   try {
+    await client.connect();
     const database = client.db(databaseName);
     const bars = database.collection('billings');
     await bars.insertMany(
@@ -103,6 +101,8 @@ async function run() {
               },
             ])
     console.log('DB Inserted Successfully');
+  } catch (err) {
+    console.error(err);
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
