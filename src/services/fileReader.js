@@ -76,7 +76,7 @@ function readTxt(filename) {
 }
 
 function isValidCsvDate(value) {
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return false;
+    if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) return false;
     const [mm, dd, yyyy] = value.split('/').map(Number);
     const date = new Date(Date.UTC(yyyy, mm - 1, dd));
     return (
