@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
+const path = require('node:path');
 const { readTxt, readCsv } = require('../services/fileReader');
 const Billing = require('../models/Billing');
 
@@ -17,8 +17,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Helper function to format date as MM/DD/YYYY
+const formatDate = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const year = d.getUTCFullYear();
+    return `${month}/${day}/${year}`;
+};
+
 // 3.1.1 - GET route to display file upload form for web browser access
-router.get('/process-file', (req, res) => {
+router.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
         <html>
@@ -45,7 +55,7 @@ router.get('/process-file', (req, res) => {
                     <p>• TXT: 18 characters per line (2 for Billing Cycle + 8 for Start Date + 8 for End Date)</p>
                     <p>• CSV: 3 columns (Billing Cycle, Start Date MM/DD/YYYY, End Date MM/DD/YYYY)</p>
                 </div>
-                <form action="/bars/process-file" method="POST" enctype="multipart/form-data">
+                <form action="/upload" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="file">Select a file to process:</label>
                         <input type="file" name="file" id="file" required>
@@ -58,7 +68,7 @@ router.get('/process-file', (req, res) => {
     `);
 });
 
-router.post('/process-file', upload.single('file'), async (req, res) => {
+router.post('/', upload.single('file'), async (req, res) => {
     try {
         // 3.1.2 - Validate whether it is a single file
         if (!req.file) {
@@ -85,23 +95,6 @@ router.post('/process-file', upload.single('file'), async (req, res) => {
         // 3.2.4 - Display success message in CLI
         console.log('Successfully processed Request File');
 
-        // 3.1.8 - Save contents of request files to database
-        for (const request of requests) {
-            await Billing.findOneAndUpdate(
-                {
-                    billing_cycle: request.billing_cycle,
-                    start_date: request.start_date,
-                    end_date: request.end_date
-                },
-                {
-                    billing_cycle: request.billing_cycle,
-                    start_date: request.start_date,
-                    end_date: request.end_date
-                },
-                { upsert: true, new: true }
-            );
-        }
-
         // Query DB by billing_cycle, start_date, and end_date
         const queryConditions = requests.map(r => ({
             billing_cycle: r.billing_cycle,
@@ -116,18 +109,19 @@ router.post('/process-file', upload.single('file'), async (req, res) => {
         // 3.2.3 - If no resulting records, display message
         if (!records.length) {
             return res.json({
-                message: 'No record(s) to write to the output file.'
+                message: 'No Record Found!'
             });
         }
 
         // Display records with required fields
         const result = records.map(record => ({
             billing_cycle: record.billing_cycle,
-            start_date: record.start_date,
-            end_date: record.end_date,
+            start_date: formatDate(record.start_date),
+            end_date: formatDate(record.end_date),
+            amount: record.amount,
+            account_name: record.account?.account_name,
             first_name: record.account?.customer?.first_name,
-            last_name: record.account?.customer?.last_name,
-            amount: record.amount
+            last_name: record.account?.customer?.last_name
         }));
 
         return res.json(result);
