@@ -67,7 +67,7 @@ router.get('/', (req, res) => {
     `);
 });
 
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', upload.single('upload'), async (req, res) => {
     try {
         // 3.1.2 - Validate whether it is a single file
         if (!req.file) {
