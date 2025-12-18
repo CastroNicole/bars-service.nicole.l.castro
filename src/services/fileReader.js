@@ -26,11 +26,16 @@ function readTxt(filename) {
     }
 
     const content = fs.readFileSync(filename, 'utf8').trim();
-    if (!content) {
+    return readTxtFromBuffer(content);
+}
+
+function readTxtFromBuffer(content) {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
         throw new Error('No request(s) to read from the input file.');
     }
 
-    const lines = content.split(/\r?\n/);
+    const lines = trimmedContent.split(/\r?\n/);
     const requests = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -92,11 +97,16 @@ function readCsv(filename) {
     }
 
     const content = fs.readFileSync(filename, 'utf8').trim();
-    if (!content) {
+    return readCsvFromBuffer(content);
+}
+
+function readCsvFromBuffer(content) {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
         throw new Error('No request(s) to read from the input file.');
     }
 
-    const lines = content.split(/\r?\n/);
+    const lines = trimmedContent.split(/\r?\n/);
     const requests = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -139,6 +149,8 @@ function readCsv(filename) {
 
 module.exports = {
     readTxt,
-    readCsv
+    readCsv,
+    readTxtFromBuffer,
+    readCsvFromBuffer
 };
 

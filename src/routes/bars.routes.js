@@ -1,21 +1,20 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('node:path');
-const { readTxt, readCsv } = require('../services/fileReader');
+const fs = require('node:fs');
+const { readTxtFromBuffer, readCsvFromBuffer } = require('../services/fileReader');
 const Billing = require('../models/Billing');
 
 const router = express.Router();
 
-// Configure multer to keep original filename and extension
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
+// Use memory storage to validate file content before saving to disk
+// Limit file size to 1MB to prevent DoS attacks
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 1 * 1024 * 1024 // 1MB limit
     }
 });
-const upload = multer({ storage: storage });
 
 // Helper function to format date as MM/DD/YYYY
 const formatDate = (date) => {
@@ -79,12 +78,13 @@ router.post('/', upload.single('file'), async (req, res) => {
 
         const ext = path.extname(req.file.originalname).toLowerCase();
         let requests;
+        const fileContent = req.file.buffer.toString('utf8');
 
         // 3.1.3 - Check if file is TXT or CSV format
         if (ext === '.txt') {
-            requests = readTxt(req.file.path);
+            requests = readTxtFromBuffer(fileContent);
         } else if (ext === '.csv') {
-            requests = readCsv(req.file.path);
+            requests = readCsvFromBuffer(fileContent);
         } else {
             console.log('File is not supported for processing.');
             return res.status(400).json({
@@ -112,6 +112,10 @@ router.post('/', upload.single('file'), async (req, res) => {
                 message: 'No Record Found!'
             });
         }
+
+        // Records found - save file to uploads folder
+        const uploadPath = path.join('uploads', req.file.originalname);
+        fs.writeFileSync(uploadPath, req.file.buffer);
 
         // Display records with required fields
         const result = records.map(record => ({
