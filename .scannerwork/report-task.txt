@@ -2,5 +2,5 @@ projectKey=bars-service.nicole.l.castro
 serverUrl=http://localhost:9000
 serverVersion=25.12.0.117093
 dashboardUrl=http://localhost:9000/dashboard?id=bars-service.nicole.l.castro
-ceTaskId=fbc3ba87-c597-43b8-8e0e-dc4757755048
-ceTaskUrl=http://localhost:9000/api/ce/task?id=fbc3ba87-c597-43b8-8e0e-dc4757755048
+ceTaskId=70a2c739-e79a-4c76-8465-604d998726de
+ceTaskUrl=http://localhost:9000/api/ce/task?id=70a2c739-e79a-4c76-8465-604d998726de

@@ -8,7 +8,6 @@ const Billing = require('../models/Billing');
 const router = express.Router();
 
 // Use memory storage to validate file content before saving to disk
-// Limit file size to 1MB to prevent DoS attacks
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
@@ -16,7 +15,6 @@ const upload = multer({
     }
 });
 
-// Helper function to format date as MM/DD/YYYY
 const formatDate = (date) => {
     if (!date) return null;
     const d = new Date(date);
@@ -25,47 +23,6 @@ const formatDate = (date) => {
     const year = d.getUTCFullYear();
     return `${month}/${day}/${year}`;
 };
-
-// 3.1.1 - GET route to display file upload form for web browser access
-router.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>BARS - Process File</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h1 { color: #333; }
-                .form-group { margin: 20px 0; }
-                label { display: block; margin-bottom: 8px; font-weight: bold; }
-                input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
-                button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-                button:hover { background: #0056b3; }
-                .info { background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
-                .info p { margin: 5px 0; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>BARS - Process Request File</h1>
-                <div class="info">
-                    <p><strong>Supported formats:</strong></p>
-                    <p>• TXT: 18 characters per line (2 for Billing Cycle + 8 for Start Date + 8 for End Date)</p>
-                    <p>• CSV: 3 columns (Billing Cycle, Start Date MM/DD/YYYY, End Date MM/DD/YYYY)</p>
-                </div>
-                <form action="/upload" method="POST" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="file">Select a file to process:</label>
-                        <input type="file" name="file" id="file" required>
-                    </div>
-                    <button type="submit">Process File</button>
-                </form>
-            </div>
-        </body>
-        </html>
-    `);
-});
 
 router.post('/', upload.single('upload'), async (req, res) => {
     try {
